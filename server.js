@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const app = express();
-const port = 3000;
+// const port = 3000;
+const port = process.env.PORT || 3000;
+const path = require(`path`);
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 var multer = require('multer')
@@ -19,6 +21,9 @@ const client = new MongoClient(uri, {
 app.use(express.json());
 app.use(cors());
 
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname, '/dist/stock-market/index.html'));
+//   });
 
 
 app.get('/search/profile', (req, res) => {
@@ -99,11 +104,21 @@ app.get('/search/polygonHourly', (req, res) => {
     // console.log(tickerSymbol)
     const apiKey = "UE_bvZYHUteYHEDvzPv4xB8xZH1t1jlD";
 
+    // const currentDate = new Date();
+    // const fromDate = new Date(currentDate);
+    // fromDate.setDate(currentDate.getDate() - 1);
+    // const from_date=fromDate.getFullYear()+"-"+(fromDate.getMonth()+1).toString().padStart(2,'0')+"-"+(fromDate.getDate().toString().padStart(2, '0'));
+    // const to_date=currentDate.getFullYear()+"-"+(currentDate.getMonth()+1).toString().padStart(2,'0')+"-"+currentDate.getDate().toString().padStart(2,'0');
+    // hello
     const currentDate = new Date();
-    const fromDate = new Date(currentDate);
-    fromDate.setDate(currentDate.getDate() - 1);
-    const from_date=fromDate.getFullYear()+"-"+(fromDate.getMonth()+1).toString().padStart(2,'0')+"-"+(fromDate.getDate().toString().padStart(2, '0'));
-    const to_date=currentDate.getFullYear()+"-"+(currentDate.getMonth()+1).toString().padStart(2,'0')+"-"+currentDate.getDate().toString().padStart(2,'0');
+    const offset = -7 * 60 * 60 * 1000;
+    const currentDatePDT = new Date(currentDate.getTime() + offset);
+    const fromDatePDT = new Date(currentDatePDT);
+    fromDatePDT.setDate(currentDatePDT.getDate() - 1);
+    const from_date = `${fromDatePDT.getFullYear()}-${(fromDatePDT.getMonth() + 1).toString().padStart(2, '0')}-${fromDatePDT.getDate().toString().padStart(2, '0')}`;
+    const to_date = `${currentDatePDT.getFullYear()}-${(currentDatePDT.getMonth() + 1).toString().padStart(2, '0')}-${currentDatePDT.getDate().toString().padStart(2, '0')}`;
+
+
     
     
     console.log(from_date);
@@ -427,6 +442,23 @@ app.get('/search/top_news', (req, res) => {
         });
 });
 
+const root=require("path").join(__dirname, "dist");
+app.use(express.static(root));
+// app.use("/", (req, res) => {
+//     res.sendFile("index.html", { root });
+//   });
+
+app.use("/", (req, res, next) => {
+    if(req.originalUrl==="/"){
+        res.redirect(302,"/search/home");
+    }
+    else{
+        next();
+    }
+});
+app.use("/search/home", (req, res) => {
+    res.sendFile("index.html", { root });
+  });
 
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
